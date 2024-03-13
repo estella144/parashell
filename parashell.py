@@ -18,7 +18,7 @@ import os
 import platform
 import sys
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 DATE = "13 Mar 2024"
 
 NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
@@ -56,6 +56,14 @@ while True:
         print(f"Parashell {VERSION} ({DATE}) on {sys.platform}")
         print(f"Python:   {sys.version}")
         print(f"Platform: {platform.system()} {platform.release()} ({platform.platform()})")
+    if platform.system() == "Windows":
+        release, version, csd, ptype = platform.win32_ver()
+        edition = platform.win32_edition()
+        print(f"Windows:  {release} {edition} {csd} ({version}) {ptype}")
+    elif platform.system() == "Darwin":
+        release, versioninfo, machine = platform.mac_ver()
+        print(f"macOS:    {release} on {machine}")
+
     elif cmd == "exit":
         break
     else:
