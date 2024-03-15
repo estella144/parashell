@@ -95,7 +95,7 @@ def print_page(header, footer, pages, page_idx, cd):
     else:
         left_arrow = ""
 
-    if page_idx != len(pages)-1:
+    if page_idx != len(pages)-2:
         right_arrow = " >"
     else:
         right_arrow = ""
