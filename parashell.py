@@ -14,11 +14,20 @@
 ##    You should have received a copy of the GNU General Public License
 ##    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+print("Starting Parashell...")
+print("Importing module os (1/5)...")
+
 import os
+print("Importing module platform (2/5)...")
 import platform
+print("Importing module shutil (3/5)...")
 import shutil
+print("Importing module subprocess (4/5)...")
 import subprocess
+print("Importing module sys (5/5)...")
 import sys
+print("Finished importing modules")
+print("Initialising variables...")
 
 VERSION = "0.2.0"
 DATE = "15 Mar 2024"
@@ -29,6 +38,8 @@ This is free software, and you are welcome to redistribute it
 under certain conditions; type `show c' for details."""
 
 page_idx = 0
+
+print("Initialising function info (1/5)")
 
 def info():
     print(f"Parashell {VERSION} ({DATE}) on {sys.platform}")
@@ -42,14 +53,7 @@ def info():
         release, versioninfo, machine = platform.mac_ver()
         print(f"macOS:    {release} on {machine}")
 
-print(NOTICE)
-print()
-info()
-print()
-print("For cd, please enter full (absolute) path - not relative path.")
-print("Type help for help.")
-print()
-input("[Enter] - Continue")
+print("Initialising function clear_screen (2/5)")
 
 def clear_screen():
     if platform.system() == "Windows":
@@ -58,6 +62,8 @@ def clear_screen():
         # macOS or Linux
         os.system("clear")
 
+print("Initialising function get_dir_output (3/5)")
+
 def get_dir_output():
     if platform.system() == "Windows":
         out = subprocess.check_output("dir", shell=True)
@@ -65,6 +71,8 @@ def get_dir_output():
         # macOS or Linux
         out = subprocess.check_output("ls -l", shell=True)
     return out.decode("utf-8")
+
+print("Initialising function paginate_output (4/5)")
 
 def paginate_output(out):
     lines = out.split("\n")
@@ -85,6 +93,8 @@ def paginate_output(out):
         remaining_lines = content[len(content)//12*12:]
         pages.append(remaining_lines)
     return [header, footer, pages]
+
+print("Initialising function print_page (5/5)")
 
 def print_page(header, footer, pages, page_idx, cd):
     global VERSION
@@ -109,6 +119,17 @@ def print_page(header, footer, pages, page_idx, cd):
     print('\n'.join(current_page))
     print('\n'.join(footer))
     print(f"{bottom_divider_msg:=^{columns}}")
+
+clear_screen()
+
+print(NOTICE)
+print()
+info()
+print()
+print("For cd, please enter full (absolute) path - not relative path.")
+print("Type help for help.")
+print()
+input("[Enter] - Continue")
 
 while True:
     clear_screen()
