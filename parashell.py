@@ -46,6 +46,13 @@ print("For cd, please enter full (absolute) path - not relative path.")
 print("Type help for help.")
 print()
 
+def clear_screen():
+    if platform.system() == "Windows":
+        os.system("cls")
+    else:
+        # macOS or Linux
+        os.system("clear")
+
 while True:
     cd = os.getcwd()
     cmd = input(f"{cd}> ")
