@@ -32,7 +32,7 @@ def info():
     print(f"Platform: {platform.system()} {platform.release()} ({platform.platform()})")
     if platform.system() == "Windows":
         release, version, csd, ptype = platform.win32_ver()
-        print(f"Windows: {release} {platform.win32_edition()} ({version}) {csd} {ptype}")
+        print(f"Windows:  {release} {platform.win32_edition()} ({version}) {csd} {ptype}")
     elif platform.system() == "Darwin":
         # macOS
         release, versioninfo, machine = platform.mac_ver()
