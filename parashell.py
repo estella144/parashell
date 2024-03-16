@@ -15,8 +15,8 @@
 ##    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 print("Starting Parashell...")
-print("Importing module os (1/5)...")
 
+print("Importing module os (1/5)...")
 import os
 print("Importing module platform (2/5)...")
 import platform
@@ -29,8 +29,8 @@ import sys
 print("Finished importing modules")
 print("Initialising variables...")
 
-VERSION = "0.2.0"
-DATE = "15 Mar 2024"
+VERSION = "0.2.1"
+DATE = "16 Mar 2024"
 
 NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
 This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
@@ -143,6 +143,7 @@ while True:
         try:
             cl = cmd.split(" ", 1)
             os.chdir(cl[1])
+            page_idx = 0
             print(f"Success: changed directory to {cl[1]}")
         except IndexError:
             print("Error: 1 argument required for cd.")
@@ -156,6 +157,7 @@ while True:
     elif cmd == "help":
         print("Type any command you would normally type in your console/shell.")
         print("exit - exit Parashell")
+        print("goto - go to specific page of dir listing")
         print("info - show Parashell info")
         print("help - show this help")
         print("next - next page of dir listing")
@@ -171,16 +173,36 @@ while True:
         break
     elif cmd == "next":
         if page_idx == len(pages)-2:
-            print("No more pages to display")
+            print("Error: No more pages to display")
             input("[Enter] - Continue")
         else:
             page_idx += 1
     elif cmd == "prev":
         if page_idx == 0:
-            print("No more pages to display")
+            print("Error: No more pages to display")
             input("[Enter] - Continue")
         else:
             page_idx -= 1
+    elif cmd.startswith("goto"):
+        if len(cmd.split(' ')) == 1:
+            try:
+                p = int(input(f"Which page to display? [1-{len(pages)-1}] "))
+                p -= 1
+                if (p < 0) or (p >= len(pages)):
+                    print(f"Error: Page index {p} out of range")
+                    input("[Enter] - Continue")
+                else:
+                    page_idx = p
+            except ValueError:
+                print(f"Error: Invalid page index '{p}'")
+        else:
+            cl = cmd.split(' ', 1)
+            cp = int(cl[1])-1
+            if (cp < 0) or (cp >= len(pages)):
+                print(f"Error: Page index {cp} out of range")
+                input("[Enter] - Continue")
+            else:
+                page_idx = cp
     else:
         exit_code = os.system(cmd)
         if exit_code != 0:
