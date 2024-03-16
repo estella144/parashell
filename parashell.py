@@ -164,6 +164,7 @@ def process_goto(cmd):
             page_idx = cp
 
 def main_loop():
+    page_idx = 0
     while True:
         clear_screen()
         cd = os.getcwd()
@@ -221,8 +222,6 @@ under certain conditions; type `show c' for details."""
     WARNING = f"""Warning! This is a {DEV_STATE} release. Bugs may be present.
 Please report bugs to the GitHub repository:
 <github.com/estella144/parashell/issues>"""
-
-    page_idx = 0
 
     clear_screen()
 
