@@ -14,36 +14,17 @@
 ##    You should have received a copy of the GNU General Public License
 ##    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-print("Starting Parashell...")
-print("Importing modules...")
-
 import os
 import platform
 import shutil
 import subprocess
 import sys
 
-print("Finished importing modules")
-print("Initialising variables...")
-
 VERSION = "0.2.2"
 COMMIT = "d5d783d"
 DATE = "16 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
-
-NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
-This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
-This is free software, and you are welcome to redistribute it
-under certain conditions; type `show c' for details."""
-
-WARNING = f"""Warning! This is a {DEV_STATE} release. Bugs may be present.
-Please report bugs to the GitHub repository:
-<github.com/estella144/parashell/issues>"""
-
-page_idx = 0
-
-print("Initialising functions...")
 
 def execute_command(cmd, echo_result=True):
     try:
@@ -56,6 +37,10 @@ def execute_command(cmd, echo_result=True):
         echo_result = True
 
 def info(continue_prompt=True):
+    global VERSION
+    global COMMIT
+    global DATE
+
     print(f"Parashell {VERSION} ({COMMIT}, {DATE}) on {sys.platform}")
     print(f"Python:   {sys.version}")
     print(f"Platform: {platform.system()} {platform.release()} ({platform.platform()})")
@@ -141,96 +126,120 @@ def print_page(header, footer, pages, page_idx, cd):
     print('\n'.join(footer))
     print(f"{bottom_divider_msg:=^{columns}}")
 
-print("Finished initialising functions")
-print("Please wait...")
-
-clear_screen()
-
-print(NOTICE)
-print()
-print(WARNING)
-print()
-info(continue_prompt=False)
-print()
-print("For cd, please enter full (absolute) path - not relative path.")
-print("Type help for help.")
-print()
-input("[Enter] - Continue")
-
-while True:
-    clear_screen()
-    cd = os.getcwd()
-    output = get_dir_output()
-    header, footer, pages = paginate_output(output)
-    print_page(header, footer, pages, page_idx, cd)
-
-    cmd = input(f"{cd}> ")
-    if cmd.startswith("cd"):
-        try:
-            cl = cmd.split(" ", 1)
-            os.chdir(cl[1])
-            page_idx = 0
-            print(f"Success: changed directory to {cl[1]}")
-        except IndexError:
-            print("Error: 1 argument required for cd.")
-            input("[Enter] - Continue")
-        except FileNotFoundError:
-            print("Error: Directory not found.")
-            input("[Enter] - Continue")
-        except NotADirectoryError:
-            print("Error: Not a directory.")
-            input("[Enter] - Continue")
-    elif cmd == "help":
-        print("Type any command you would normally type in your console/shell.")
-        print("exit - exit Parashell")
-        print("goto - go to specific page of dir listing")
-        print("info - show Parashell info")
-        print("help - show this help")
-        print("next - next page of dir listing")
-        print("prev - previous page of dir listing")
+def process_cd(cmd):
+    try:
+        cl = cmd.split(" ", 1)
+        os.chdir(cl[1])
+        page_idx = 0
+        print(f"Success: changed directory to {cl[1]}")
+    except IndexError:
+        print("Error: 1 argument required for cd.")
         input("[Enter] - Continue")
-    elif cmd == "show w":
-        print("Refer to the GNU GPL, section 15 <https://www.gnu.org/licenses/>.")
-    elif cmd == "show c":
-        print("Refer to the GNU GPL, section 4-6 <https://www.gnu.org/licenses/>.")
-    elif cmd == "info":
-        info()
-    elif cmd == "exit":
-        break
-    elif cmd == "next":
-        if page_idx == len(pages)-2:
-            print("Error: No more pages to display")
-            input("[Enter] - Continue")
-        else:
-            page_idx += 1
-    elif cmd == "prev":
-        if page_idx == 0:
-            print("Error: No more pages to display")
-            input("[Enter] - Continue")
-        else:
-            page_idx -= 1
-    elif cmd.startswith("goto"):
-        if len(cmd.split(' ')) == 1:
-            try:
-                p = int(input(f"Which page to display? [1-{len(pages)-1}] "))
-                p -= 1
-                if (p < 0) or (p >= len(pages)):
-                    print(f"Error: Page index {p} out of range")
-                    input("[Enter] - Continue")
-                else:
-                    page_idx = p
-            except ValueError:
-                print(f"Error: Invalid page index '{p}'")
-        else:
-            cl = cmd.split(' ', 1)
-            cp = int(cl[1])-1
-            if (cp < 0) or (cp >= len(pages)):
-                print(f"Error: Page index {cp} out of range")
+    except FileNotFoundError:
+        print("Error: Directory not found.")
+        input("[Enter] - Continue")
+    except NotADirectoryError:
+        print("Error: Not a directory.")
+        input("[Enter] - Continue")
+
+def process_goto(cmd):
+    if len(cmd.split(' ')) == 1:
+        try:
+            p = int(input(f"Which page to display? [1-{len(pages)-1}] "))
+            p -= 1
+            if (p < 0) or (p >= len(pages)):
+                print(f"Error: Page index {p} out of range")
                 input("[Enter] - Continue")
             else:
-                page_idx = cp
+                page_idx = p
+        except ValueError:
+            print(f"Error: Invalid page index '{p}'")
     else:
-        execute_command(cmd)
-        input("[Enter] - Continue")
+        cl = cmd.split(' ', 1)
+        cp = int(cl[1])-1
+        if (cp < 0) or (cp >= len(pages)):
+            print(f"Error: Page index {cp} out of range")
+            input("[Enter] - Continue")
+        else:
+            page_idx = cp
+
+def main_loop():
+    while True:
+        clear_screen()
+        cd = os.getcwd()
+        output = get_dir_output()
+        header, footer, pages = paginate_output(output)
+        print_page(header, footer, pages, page_idx, cd)
+
+        cmd = input(f"{cd}> ")
+        if cmd.startswith("cd"):
+            process_cd(cmd)
+        elif cmd == "help":
+            print("Type any command you would normally type in your console/shell.")
+            print("exit - exit Parashell")
+            print("goto - go to specific page of dir listing")
+            print("info - show Parashell info")
+            print("help - show this help")
+            print("next - next page of dir listing")
+            print("prev - previous page of dir listing")
+            input("[Enter] - Continue")
+        elif cmd == "show w":
+            print("Refer to the GNU GPL, section 15 <https://www.gnu.org/licenses/>.")
+        elif cmd == "show c":
+            print("Refer to the GNU GPL, section 4-6 <https://www.gnu.org/licenses/>.")
+        elif cmd == "info":
+            info()
+        elif cmd == "exit":
+            break
+        elif cmd == "next":
+            if page_idx == len(pages)-2:
+                print("Error: No more pages to display")
+                input("[Enter] - Continue")
+            else:
+                page_idx += 1
+        elif cmd == "prev":
+            if page_idx == 0:
+                print("Error: No more pages to display")
+                input("[Enter] - Continue")
+            else:
+                page_idx -= 1
+        elif cmd.startswith("goto"):
+            process_goto(cmd)
+        else:
+            execute_command(cmd)
+            input("[Enter] - Continue")
+
+def main():
+
+    global DEV_STATE
+    
+    NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+This is free software, and you are welcome to redistribute it
+under certain conditions; type `show c' for details."""
+
+    WARNING = f"""Warning! This is a {DEV_STATE} release. Bugs may be present.
+Please report bugs to the GitHub repository:
+<github.com/estella144/parashell/issues>"""
+
+    page_idx = 0
+
+    clear_screen()
+
+    print(NOTICE)
+    print()
+    print(WARNING)
+    print()
+    info(continue_prompt=False)
+    print()
+    print("Type 'help' for help.")
+    print()
+    input("[Enter] - Continue")
+
+    main_loop()
+
+if name == "__main__":
+    print("Starting Parashell...")
+    main()
 
 print("Goodbye")
