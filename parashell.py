@@ -52,6 +52,7 @@ def info():
     elif platform.system() == "Darwin":
         release, versioninfo, machine = platform.mac_ver()
         print(f"macOS:    {release} on {machine}")
+    input("[Enter] - Continue")
 
 print("Initialising function clear_screen (2/5)")
 
