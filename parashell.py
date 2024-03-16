@@ -14,48 +14,37 @@
 ##    You should have received a copy of the GNU General Public License
 ##    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import os
-import platform
-import sys
+print("Starting Parashell...")
+print("Importing module os (1/5)...")
 
-VERSION = "0.1.2"
-DATE = "13 Mar 2024"
+import os
+print("Importing module platform (2/5)...")
+import platform
+print("Importing module shutil (3/5)...")
+import shutil
+print("Importing module subprocess (4/5)...")
+import subprocess
+print("Importing module sys (5/5)...")
+import sys
+print("Finished importing modules")
+print("Initialising variables...")
+
+VERSION = "0.2.0"
+DATE = "15 Mar 2024"
 
 NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
 This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
 This is free software, and you are welcome to redistribute it
 under certain conditions; type `show c' for details."""
 
-print(NOTICE)
-print()
-print(f"Parashell {VERSION} ({DATE}) on {sys.platform}")
-print(f"Python:   {sys.version}")
-print(f"Platform: {platform.system()} {platform.release()} ({platform.platform()})")
-if platform.system() == "Windows":
-    release, version, csd, ptype = platform.win32_ver()
-    edition = platform.win32_edition()
-    print(f"Windows:  {release} {edition} {csd} ({version}) {ptype}")
-print()
-print("For cd, please enter full (absolute) path - not relative path.")
-print("Type help for help.")
+page_idx = 0
 
-cd = os.getcwd()
-while True:
-    cmd = input(f"{cd}> ")
-    if cmd.startswith("cd"):
-        cl = cmd.split(" ", 1)
-        os.chdir(cl[1])
-    elif cmd == "help":
-        print("Type any command you would normally type in cmd or Terminal.")
-        print("Type info for program info.")
-    elif cmd == "show w":
-        print("Refer to the GNU GPL, section 15 <https://www.gnu.org/licenses/>.")
-    elif cmd == "show c":
-        print("Refer to the GNU GPL, section 4-6 <https://www.gnu.org/licenses/>.")
-    elif cmd == "info":
-        print(f"Parashell {VERSION} ({DATE}) on {sys.platform}")
-        print(f"Python:   {sys.version}")
-        print(f"Platform: {platform.system()} {platform.release()} ({platform.platform()})")
+print("Initialising function info (1/5)")
+
+def info():
+    print(f"Parashell {VERSION} ({DATE}) on {sys.platform}")
+    print(f"Python:   {sys.version}")
+    print(f"Platform: {platform.system()} {platform.release()} ({platform.platform()})")
     if platform.system() == "Windows":
         release, version, csd, ptype = platform.win32_ver()
         edition = platform.win32_edition()
@@ -64,13 +53,140 @@ while True:
         release, versioninfo, machine = platform.mac_ver()
         print(f"macOS:    {release} on {machine}")
 
+print("Initialising function clear_screen (2/5)")
+
+def clear_screen():
+    if platform.system() == "Windows":
+        os.system("cls")
+    else:
+        # macOS or Linux
+        os.system("clear")
+
+print("Initialising function get_dir_output (3/5)")
+
+def get_dir_output():
+    if platform.system() == "Windows":
+        out = subprocess.check_output("dir", shell=True)
+    else:
+        # macOS or Linux
+        out = subprocess.check_output("ls -l", shell=True)
+    return out.decode("utf-8")
+
+print("Initialising function paginate_output (4/5)")
+
+def paginate_output(out):
+    lines = out.split("\n")
+    if platform.system() == "Windows":
+        header_lines = 5
+        footer_lines = 2
+        footer = lines[-footer_lines:]
+        content = lines[header_lines:-footer_lines]
+    else:
+        # macOS or Linux
+        header_lines = 1
+        footer_lines = 0
+        footer = []
+        content = lines[header_lines:]
+    header = lines[0:header_lines]
+    pages = [content[i:i+12] for i in range(0, len(content), 12)]
+    if len(content) % 12 != 0:
+        remaining_lines = content[len(content)//12*12:]
+        pages.append(remaining_lines)
+    return [header, footer, pages]
+
+print("Initialising function print_page (5/5)")
+
+def print_page(header, footer, pages, page_idx, cd):
+    global VERSION
+    columns, lines = shutil.get_terminal_size()
+
+    if page_idx != 0:
+        left_arrow = "< "
+    else:
+        left_arrow = ""
+
+    if page_idx != len(pages)-2:
+        right_arrow = " >"
+    else:
+        right_arrow = ""
+
+    current_page = pages[page_idx]
+    top_divider_msg = f"[Parashell {VERSION} - {cd}]"
+    bottom_divider_msg = f"[{left_arrow}Page {page_idx+1} of {len(pages)-1}{right_arrow}]"
+
+    print(f"{top_divider_msg:=^{columns}}")
+    print('\n'.join(header))
+    print('\n'.join(current_page))
+    print('\n'.join(footer))
+    print(f"{bottom_divider_msg:=^{columns}}")
+
+clear_screen()
+
+print(NOTICE)
+print()
+info()
+print()
+print("For cd, please enter full (absolute) path - not relative path.")
+print("Type help for help.")
+print()
+input("[Enter] - Continue")
+
+while True:
+    clear_screen()
+    cd = os.getcwd()
+    output = get_dir_output()
+    header, footer, pages = paginate_output(output)
+    print_page(header, footer, pages, page_idx, cd)
+
+    cmd = input(f"{cd}> ")
+    if cmd.startswith("cd"):
+        try:
+            cl = cmd.split(" ", 1)
+            os.chdir(cl[1])
+            print(f"Success: changed directory to {cl[1]}")
+        except IndexError:
+            print("Error: 1 argument required for cd.")
+            input("[Enter] - Continue")
+        except FileNotFoundError:
+            print("Error: Directory not found.")
+            input("[Enter] - Continue")
+        except NotADirectoryError:
+            print("Error: Not a directory.")
+            input("[Enter] - Continue")
+    elif cmd == "help":
+        print("Type any command you would normally type in your console/shell.")
+        print("exit - exit Parashell")
+        print("info - show Parashell info")
+        print("help - show this help")
+        print("next - next page of dir listing")
+        print("prev - previous page of dir listing")
+        input("[Enter] - Continue")
+    elif cmd == "show w":
+        print("Refer to the GNU GPL, section 15 <https://www.gnu.org/licenses/>.")
+    elif cmd == "show c":
+        print("Refer to the GNU GPL, section 4-6 <https://www.gnu.org/licenses/>.")
+    elif cmd == "info":
+        info()
     elif cmd == "exit":
         break
+    elif cmd == "next":
+        if page_idx == len(pages)-2:
+            print("No more pages to display")
+            input("[Enter] - Continue")
+        else:
+            page_idx += 1
+    elif cmd == "prev":
+        if page_idx == 0:
+            print("No more pages to display")
+            input("[Enter] - Continue")
+        else:
+            page_idx -= 1
     else:
         exit_code = os.system(cmd)
         if exit_code != 0:
             print(f"Fail (exit code {exit_code})")
         else:
             print(f"Success (exit code {exit_code})")
+        input("[Enter] - Continue")
 
 print("Goodbye")
