@@ -15,34 +15,48 @@
 ##    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 print("Starting Parashell...")
+print("Importing modules...")
 
-print("Importing module os (1/5)...")
 import os
-print("Importing module platform (2/5)...")
 import platform
-print("Importing module shutil (3/5)...")
 import shutil
-print("Importing module subprocess (4/5)...")
 import subprocess
-print("Importing module sys (5/5)...")
 import sys
+
 print("Finished importing modules")
 print("Initialising variables...")
 
 VERSION = "0.2.2"
+COMMIT = "d5d783d"
 DATE = "16 Mar 2024"
+DEV_STATE_SHORT = ""
+DEV_STATE = "development"
 
 NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
 This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
 This is free software, and you are welcome to redistribute it
 under certain conditions; type `show c' for details."""
 
+WARNING = f"""Warning! This is a {DEV_STATE} release. Bugs may be present.
+Please report bugs to the GitHub repository:
+<github.com/estella144/parashell/issues>"""
+
 page_idx = 0
 
-print("Initialising function info (1/5)")
+print("Initialising functions...")
 
-def info():
-    print(f"Parashell {VERSION} ({DATE}) on {sys.platform}")
+def execute_command(cmd, echo_result=True):
+    try:
+        subprocess.run(cmd, shell=True, check=True)
+        if echo_result:
+            print(f"Success: {cmd}")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed executing command: {cmd} (return code {e.returncode})")
+    finally:
+        echo_result = True
+
+def info(continue_prompt=True):
+    print(f"Parashell {VERSION} ({COMMIT}, {DATE}) on {sys.platform}")
     print(f"Python:   {sys.version}")
     print(f"Platform: {platform.system()} {platform.release()} ({platform.platform()})")
     if platform.system() == "Windows":
@@ -52,18 +66,16 @@ def info():
     elif platform.system() == "Darwin":
         release, versioninfo, machine = platform.mac_ver()
         print(f"macOS:    {release} on {machine}")
-    input("[Enter] - Continue")
-
-print("Initialising function clear_screen (2/5)")
+    if continue_prompt:
+        input("[Enter] - Continue")
+    continue_prompt = True
 
 def clear_screen():
     if platform.system() == "Windows":
-        os.system("cls")
+        execute_command("cls", echo_result=False)
     else:
         # macOS or Linux
-        os.system("clear")
-
-print("Initialising function get_dir_output (3/5)")
+        execute_command("clear", echo_result=False)
 
 def get_dir_output():
     if platform.system() == "Windows":
@@ -75,9 +87,6 @@ def get_dir_output():
         return out.decode("utf-8")
     except UnicodeDecodeError as ue:
         return f"Error: Cannot get directory listing\n{ue}"
-    
-
-print("Initialising function paginate_output (4/5)")
 
 def paginate_output(out):
     if not out.startswith("Error"):
@@ -101,8 +110,6 @@ def paginate_output(out):
         return [header, footer, pages]
     else:
         return ["", "", out]
-
-print("Initialising function print_page (5/5)")
 
 def print_page(header, footer, pages, page_idx, cd):
     global VERSION
@@ -134,11 +141,16 @@ def print_page(header, footer, pages, page_idx, cd):
     print('\n'.join(footer))
     print(f"{bottom_divider_msg:=^{columns}}")
 
+print("Finished initialising functions")
+print("Please wait...")
+
 clear_screen()
 
 print(NOTICE)
 print()
-info()
+print(WARNING)
+print()
+info(continue_prompt=False)
 print()
 print("For cd, please enter full (absolute) path - not relative path.")
 print("Type help for help.")
@@ -218,11 +230,7 @@ while True:
             else:
                 page_idx = cp
     else:
-        exit_code = os.system(cmd)
-        if exit_code != 0:
-            print(f"Fail (exit code {exit_code})")
-        else:
-            print(f"Success (exit code {exit_code})")
+        execute_command(cmd)
         input("[Enter] - Continue")
 
 print("Goodbye")
