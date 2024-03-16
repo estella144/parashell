@@ -21,11 +21,7 @@ import subprocess
 import sys
 
 VERSION = "0.2.3.dev1"
-<<<<<<< HEAD
-COMMIT = "c0e6367"
-=======
-COMMIT = "8c2d6a9"
->>>>>>> 86f80da41cdee94ea00faa7aeb37b6b7e2697b45
+COMMIT = "e156451"
 DATE = "16 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
