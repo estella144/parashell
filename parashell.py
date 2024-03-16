@@ -29,7 +29,7 @@ import sys
 print("Finished importing modules")
 print("Initialising variables...")
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 DATE = "16 Mar 2024"
 
 NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
@@ -71,29 +71,36 @@ def get_dir_output():
     else:
         # macOS or Linux
         out = subprocess.check_output("ls -l", shell=True)
-    return out.decode("utf-8")
+    try:
+        return out.decode("utf-8")
+    except UnicodeDecodeError as ue:
+        return f"Error: Cannot get directory listing\n{ue}"
+    
 
 print("Initialising function paginate_output (4/5)")
 
 def paginate_output(out):
-    lines = out.split("\n")
-    if platform.system() == "Windows":
-        header_lines = 5
-        footer_lines = 2
-        footer = lines[-footer_lines:]
-        content = lines[header_lines:-footer_lines]
+    if not out.startswith("Error"):
+        lines = out.split("\n")
+        if platform.system() == "Windows":
+            header_lines = 5
+            footer_lines = 2
+            footer = lines[-footer_lines:]
+            content = lines[header_lines:-footer_lines]
+        else:
+            # macOS or Linux
+            header_lines = 1
+            footer_lines = 0
+            footer = []
+            content = lines[header_lines:]
+        header = lines[0:header_lines]
+        pages = [content[i:i+12] for i in range(0, len(content), 12)]
+        if len(content) % 12 != 0:
+            remaining_lines = content[len(content)//12*12:]
+            pages.append(remaining_lines)
+        return [header, footer, pages]
     else:
-        # macOS or Linux
-        header_lines = 1
-        footer_lines = 0
-        footer = []
-        content = lines[header_lines:]
-    header = lines[0:header_lines]
-    pages = [content[i:i+12] for i in range(0, len(content), 12)]
-    if len(content) % 12 != 0:
-        remaining_lines = content[len(content)//12*12:]
-        pages.append(remaining_lines)
-    return [header, footer, pages]
+        return ["", "", out]
 
 print("Initialising function print_page (5/5)")
 
@@ -111,13 +118,19 @@ def print_page(header, footer, pages, page_idx, cd):
     else:
         right_arrow = ""
 
-    current_page = pages[page_idx]
+    if not type(pages) == str:
+        current_page = pages[page_idx]
+    else:
+        current_page = pages
     top_divider_msg = f"[Parashell {VERSION} - {cd}]"
     bottom_divider_msg = f"[{left_arrow}Page {page_idx+1} of {len(pages)-1}{right_arrow}]"
 
     print(f"{top_divider_msg:=^{columns}}")
     print('\n'.join(header))
-    print('\n'.join(current_page))
+    if not type(pages) == str:
+        print('\n'.join(current_page))
+    else:
+        print(current_page)
     print('\n'.join(footer))
     print(f"{bottom_divider_msg:=^{columns}}")
 
