@@ -21,7 +21,7 @@ import subprocess
 import sys
 
 VERSION = "0.2.3.dev1"
-COMMIT = "e156451"
+COMMIT = "d5d783d"
 DATE = "16 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
@@ -238,7 +238,7 @@ Please report bugs to the GitHub repository:
 
     main_loop()
 
-if name == "__main__":
+if __name__ == "__main__":
     print("Starting Parashell...")
     main()
     print("Goodbye")
