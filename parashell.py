@@ -21,7 +21,7 @@ import subprocess
 import sys
 
 VERSION = "0.2.3.dev1"
-COMMIT = "d5d783d"
+COMMIT = "f20e8d0"
 DATE = "16 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
@@ -98,6 +98,9 @@ def paginate_output(out):
 
 def print_page(header, footer, pages, page_idx, cd):
     global VERSION
+    global DEV_STATE
+
+    WARNING_SHORT = f"[Warning: {DEV_STATE} release. Bugs may be present.]"
     columns, lines = shutil.get_terminal_size()
 
     if page_idx != 0:
@@ -118,6 +121,7 @@ def print_page(header, footer, pages, page_idx, cd):
     bottom_divider_msg = f"[{left_arrow}Page {page_idx+1} of {len(pages)-1}{right_arrow}]"
 
     print(f"{top_divider_msg:=^{columns}}")
+    print(f"{WARNING_SHORT:-^{columns}}")
     print('\n'.join(header))
     if not type(pages) == str:
         print('\n'.join(current_page))
