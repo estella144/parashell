@@ -212,7 +212,7 @@ def main_loop():
 def main():
 
     global DEV_STATE
-    
+
     NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
 This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
 This is free software, and you are welcome to redistribute it
@@ -241,5 +241,4 @@ Please report bugs to the GitHub repository:
 if name == "__main__":
     print("Starting Parashell...")
     main()
-
-print("Goodbye")
+    print("Goodbye")
