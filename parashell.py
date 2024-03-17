@@ -21,7 +21,7 @@ import subprocess
 import sys
 
 VERSION = "0.2.3.dev1"
-COMMIT = "f20e8d0"
+COMMIT = "7e276b0"
 DATE = "16 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
@@ -147,8 +147,8 @@ def process_cd(cmd):
         input("[Enter] - Continue")
 
 def process_goto(cmd):
-    if len(cmd.split(' ')) == 1:
-        try:
+    try:
+        if len(cmd.split(' ')) == 1:
             p = int(input(f"Which page to display? [1-{len(pages)-1}] "))
             p -= 1
             if (p < 0) or (p >= len(pages)):
@@ -156,16 +156,18 @@ def process_goto(cmd):
                 input("[Enter] - Continue")
             else:
                 page_idx = p
-        except ValueError:
-            print(f"Error: Invalid page index '{p}'")
-    else:
-        cl = cmd.split(' ', 1)
-        cp = int(cl[1])-1
-        if (cp < 0) or (cp >= len(pages)):
-            print(f"Error: Page index {cp} out of range")
-            input("[Enter] - Continue")
         else:
-            page_idx = cp
+            cl = cmd.split(' ', 1)
+            cp = int(cl[1])-1
+            if (cp < 0) or (cp >= len(pages)):
+                print(f"Error: Page index {cp} out of range")
+                input("[Enter] - Continue")
+            else:
+                page_idx = cp
+    except ValueError:
+        print(f"Error: Invalid page index")
+        input("[Enter] - Continue")
+
 
 def main_loop():
     page_idx = 0
