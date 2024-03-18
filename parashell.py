@@ -39,7 +39,7 @@ def apply_prompt_customization():
     hostname = get_hostname()
     cwd = os.getcwd()
     # Default until reading from config.ini is implemented
-    prompt_format = "{username}@{hostname}:{cwd}"
+    prompt_format = "{username}@{hostname}:{cwd}$"
     prompt = prompt_format.format(username=username, hostname=hostname, cwd=cwd)
     return prompt
 
@@ -73,7 +73,7 @@ def setup_config():
         config.read('config.ini')
         config["Version"] = {"ParashellVersion": VERSION}
         config["Custom.CmdAliases"] = {}
-        config["Custom.Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}"}
+        config["Custom.Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}$"}
         with open('config.ini', mode='w', encoding="utf-8") as f:
             config.write(f)
     else:
