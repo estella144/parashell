@@ -23,7 +23,7 @@ import subprocess
 import sys
 
 VERSION = "0.3.0.dev1"
-COMMIT = "0015bd4"
+COMMIT = "fd8e09a"
 DATE = "18 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
@@ -38,8 +38,15 @@ def apply_prompt_customization():
     username = get_username()
     hostname = get_hostname()
     cwd = os.getcwd()
-    # Default until reading from config.ini is implemented
-    prompt_format = "{username}@{hostname}:{cwd}$"
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    # DEBUG: KeyError
+    print(str(config))
+    for section in config.sections():
+        print(f"Section: {section}")
+        for key, value in config[section].items():
+            print(f"{key} = {value}")
+    prompt_format = config["Prompt"]["promptformat"]
     prompt = prompt_format.format(username=username, hostname=hostname, cwd=cwd)
     return prompt
 
@@ -72,8 +79,8 @@ def setup_config():
         config = configparser.ConfigParser()
         config.read('config.ini')
         config["Version"] = {"ParashellVersion": VERSION}
-        config["Custom.CmdAliases"] = {}
-        config["Custom.Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}$"}
+        config["CmdAliases"] = {}
+        config["Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}$"}
         with open('config.ini', mode='w', encoding="utf-8") as f:
             config.write(f)
     else:
@@ -179,15 +186,19 @@ def process_cd(cmd):
         os.chdir(cl[1])
         page_idx = 0
         print(f"Success: changed directory to {cl[1]}")
+        return True
     except IndexError:
         print("Error: 1 argument required for cd.")
         input("[Enter] - Continue")
+        return False
     except FileNotFoundError:
         print("Error: Directory not found.")
         input("[Enter] - Continue")
+        return False
     except NotADirectoryError:
         print("Error: Not a directory.")
         input("[Enter] - Continue")
+        return False
 
 def process_goto(cmd):
     try:
@@ -211,25 +222,23 @@ def process_goto(cmd):
         print(f"Error: Invalid page index")
         input("[Enter] - Continue")
 
-
-def main_loop():
-    page_idx = 0
+def refresh_page(page_idx):
     clear_screen()
     cd = os.getcwd()
     output = get_dir_output()
     header, footer, pages = paginate_output(output)
     print_page(header, footer, pages, page_idx, cd)
+
+def main_loop():
+    page_idx = 0
+    refresh_page(page_idx)
     while True:
         prompt = apply_prompt_customization()
 
         cmd = input(f"{prompt} ")
         if cmd.startswith("cd"):
             process_cd(cmd)
-            clear_screen()
-            cd = os.getcwd()
-            output = get_dir_output()
-            header, footer, pages = paginate_output(output)
-            print_page(header, footer, pages, page_idx, cd)
+            refresh_page(page_idx)
         elif cmd == "help":
             print("Type any command you would normally type in your console/shell.")
             print("exit - exit Parashell")
