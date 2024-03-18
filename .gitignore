@@ -3,3 +3,4 @@
 /dist
 parashell*.spec
 .python-version
+config.ini

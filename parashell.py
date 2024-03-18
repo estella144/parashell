@@ -14,6 +14,7 @@
 ##    You should have received a copy of the GNU General Public License
 ##    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import getpass
 import os
 import platform
 import shutil
@@ -25,6 +26,21 @@ COMMIT = "7e276b0"
 DATE = "16 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
+
+def get_username():
+    return getpass.getuser()
+
+def get_hostname():
+    return os.uname().nodename
+
+def apply_prompt_customization():
+    username = get_username()
+    hostname = get_hostname()
+    cwd = os.getcwd()
+    # Default until reading from config.ini is implemented
+    prompt_format = "{username}@{hostname}:{cwd}"
+    prompt = prompt_format.format(username=username, hostname=hostname, cwd=cwd)
+    return prompt
 
 def execute_command(cmd, echo_result=True):
     try:
@@ -171,16 +187,22 @@ def process_goto(cmd):
 
 def main_loop():
     page_idx = 0
+    clear_screen()
+    cd = os.getcwd()
+    output = get_dir_output()
+    header, footer, pages = paginate_output(output)
+    print_page(header, footer, pages, page_idx, cd)
     while True:
-        clear_screen()
-        cd = os.getcwd()
-        output = get_dir_output()
-        header, footer, pages = paginate_output(output)
-        print_page(header, footer, pages, page_idx, cd)
+        prompt = apply_prompt_customization()
 
-        cmd = input(f"{cd}> ")
+        cmd = input(f"{prompt} ")
         if cmd.startswith("cd"):
             process_cd(cmd)
+            clear_screen()
+            cd = os.getcwd()
+            output = get_dir_output()
+            header, footer, pages = paginate_output(output)
+            print_page(header, footer, pages, page_idx, cd)
         elif cmd == "help":
             print("Type any command you would normally type in your console/shell.")
             print("exit - exit Parashell")
