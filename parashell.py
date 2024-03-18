@@ -14,6 +14,7 @@
 ##    You should have received a copy of the GNU General Public License
 ##    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import configparser
 import getpass
 import os
 import platform
@@ -21,9 +22,9 @@ import shutil
 import subprocess
 import sys
 
-VERSION = "0.2.3.0"
-COMMIT = "d7b43b9"
-DATE = "16 Mar 2024"
+VERSION = "0.3.0.dev1"
+COMMIT = "0015bd4"
+DATE = "18 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
 
@@ -51,6 +52,32 @@ def execute_command(cmd, echo_result=True):
         print(f"Failed executing command: {cmd} (return code {e.returncode})")
     finally:
         echo_result = True
+
+def check_for_config():
+    try:
+        f = open('config.ini', mode='r', encoding="utf-8")
+        f.close()
+        return True
+    except FileNotFoundError:
+        print("Config file not found")
+        return False
+
+def setup_config():
+    global VERSION
+    config_file_exists = check_for_config()
+    if not config_file_exists:
+        print("Setting up...")
+        f = open('config.ini', mode='w', encoding="utf-8")
+        f.close()
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        config["Version"] = {"ParashellVersion": VERSION}
+        config["Custom.CmdAliases"] = {}
+        config["Custom.Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}"}
+        with open('config.ini', mode='w', encoding="utf-8") as f:
+            config.write(f)
+    else:
+        print("Config file found")
 
 def info(continue_prompt=True):
     global VERSION
@@ -267,5 +294,6 @@ Please report bugs to the GitHub repository:
 
 if __name__ == "__main__":
     print("Starting Parashell...")
+    setup_config()
     main()
     print("Goodbye")
