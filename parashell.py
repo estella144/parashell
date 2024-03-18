@@ -21,8 +21,8 @@ import shutil
 import subprocess
 import sys
 
-VERSION = "0.2.3.dev1"
-COMMIT = "7e276b0"
+VERSION = "0.2.3.0"
+COMMIT = "d7b43b9"
 DATE = "16 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
