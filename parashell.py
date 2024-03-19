@@ -22,9 +22,9 @@ import shutil
 import subprocess
 import sys
 
-VERSION = "0.3.0.dev1"
-COMMIT = "fd8e09a"
-DATE = "18 Mar 2024"
+VERSION = "0.3.0.dev2"
+COMMIT = "b7db2b5"
+DATE = "19 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
 
@@ -35,20 +35,9 @@ def get_hostname():
     return os.uname().nodename
 
 def apply_prompt_customization():
-    username = get_username()
-    hostname = get_hostname()
-    cwd = os.getcwd()
     config = configparser.ConfigParser()
-    config.read('config.ini')
-    # DEBUG: KeyError
-    print(str(config))
-    for section in config.sections():
-        print(f"Section: {section}")
-        for key, value in config[section].items():
-            print(f"{key} = {value}")
-    prompt_format = config["Prompt"]["promptformat"]
-    prompt = prompt_format.format(username=username, hostname=hostname, cwd=cwd)
-    return prompt
+    config.read("config.ini")
+    return config["Prompt"]["promptformat"]
 
 def execute_command(cmd, echo_result=True):
     try:
@@ -80,7 +69,7 @@ def setup_config():
         config.read('config.ini')
         config["Version"] = {"ParashellVersion": VERSION}
         config["CmdAliases"] = {}
-        config["Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}$"}
+        config["Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}"}
         with open('config.ini', mode='w', encoding="utf-8") as f:
             config.write(f)
     else:
@@ -232,9 +221,16 @@ def refresh_page(page_idx):
 def main_loop():
     page_idx = 0
     refresh_page(page_idx)
-    while True:
-        prompt = apply_prompt_customization()
+    prompt_format = apply_prompt_customization()
+    username = get_username()
+    hostname = get_hostname()
+    cwd = os.getcwd() 
 
+    while True:
+        username = get_username()
+        hostname = get_hostname()
+        cwd = os.getcwd() 
+        prompt = prompt_format.format(username=username, hostname=hostname, cwd=cwd)
         cmd = input(f"{prompt} ")
         if cmd.startswith("cd"):
             process_cd(cmd)
