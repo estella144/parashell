@@ -1,3 +1,5 @@
+"""ParaShell - a shell"""
+
 ##    parashell - a shell
 ##    Copyright (C) 2024 Oliver Nguyen
 ##
@@ -29,17 +31,22 @@ DEV_STATE_SHORT = ""
 DEV_STATE = "development"
 
 def get_username():
+    '''Get the current user's username.'''
     return getpass.getuser()
 
 def get_hostname():
+    '''Get the current computer's name.'''
     return os.uname().nodename
 
 def apply_prompt_customization():
+    '''Applies prompt customization.'''
     config = configparser.ConfigParser()
     config.read("config.ini")
     return config["Prompt"]["promptformat"]
 
 def execute_command(cmd, echo_result=True):
+    '''Executes a command in the computer's shell.
+    cmd: str - command to run'''
     try:
         subprocess.run(cmd, shell=True, check=True)
         if echo_result:
@@ -50,6 +57,8 @@ def execute_command(cmd, echo_result=True):
         echo_result = True
 
 def check_for_config():
+    '''Checks if config.ini is present.
+    Returns True if config.ini is present, and False if not.'''
     try:
         f = open('config.ini', mode='r', encoding="utf-8")
         f.close()
@@ -59,6 +68,7 @@ def check_for_config():
         return False
 
 def setup_config():
+    '''Writes default values to config.ini, if it does not exist.'''
     global VERSION
     config_file_exists = check_for_config()
     if not config_file_exists:
@@ -76,6 +86,8 @@ def setup_config():
         print("Config file found")
 
 def info(continue_prompt=True):
+    '''Prints Parashell and system info.
+    continue_prompt: bool (kwarg) - if True, displays continue prompt.'''
     global VERSION
     global COMMIT
     global DATE
@@ -95,6 +107,7 @@ def info(continue_prompt=True):
     continue_prompt = True
 
 def clear_screen():
+    '''Clears the screen.'''
     if platform.system() == "Windows":
         execute_command("cls", echo_result=False)
     else:
@@ -102,6 +115,7 @@ def clear_screen():
         execute_command("clear", echo_result=False)
 
 def get_dir_output():
+    '''Get directory output.'''
     if platform.system() == "Windows":
         out = subprocess.check_output("dir", shell=True)
     else:
@@ -113,6 +127,8 @@ def get_dir_output():
         return f"Error: Cannot get directory listing\n{ue}"
 
 def paginate_output(out):
+    '''Paginates a directory listing into 12 line pages.
+    out: str - directory listing to paginate.'''
     if not out.startswith("Error"):
         lines = out.split("\n")
         if platform.system() == "Windows":
@@ -136,6 +152,13 @@ def paginate_output(out):
         return ["", "", out]
 
 def print_page(header, footer, pages, page_idx, cd):
+    '''Prints a directory listing page with header, footer and dividers.
+    header: str - page header
+    footer: str - page footer
+    pages: list[str] - pages of directory listing
+    page_idx: int - index of page to print
+    cd: str - current directory'''
+
     global VERSION
     global DEV_STATE
 
@@ -170,6 +193,8 @@ def print_page(header, footer, pages, page_idx, cd):
     print(f"{bottom_divider_msg:=^{columns}}")
 
 def process_cd(cmd):
+    '''Processes a 'cd' command.
+    cmd: str - full command, including `cd`'''
     try:
         cl = cmd.split(" ", 1)
         os.chdir(cl[1])
@@ -190,6 +215,8 @@ def process_cd(cmd):
         return False
 
 def process_goto(cmd):
+    '''Processes a `goto` command.
+    cmd: str - full command including `goto`'''
     try:
         if len(cmd.split(' ')) == 1:
             p = int(input(f"Which page to display? [1-{len(pages)-1}] "))
@@ -212,6 +239,8 @@ def process_goto(cmd):
         input("[Enter] - Continue")
 
 def refresh_page(page_idx):
+    '''Refreshes the directory listing.
+    page_idx: int - current page index'''
     clear_screen()
     cd = os.getcwd()
     output = get_dir_output()
@@ -219,6 +248,7 @@ def refresh_page(page_idx):
     print_page(header, footer, pages, page_idx, cd)
 
 def main_loop():
+    '''Main loop of Parashell.'''
     page_idx = 0
     refresh_page(page_idx)
     prompt_format = apply_prompt_customization()
@@ -271,6 +301,7 @@ def main_loop():
             input("[Enter] - Continue")
 
 def main():
+    '''Starts Parashell.'''
 
     global DEV_STATE
 
