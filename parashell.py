@@ -30,33 +30,35 @@ DATE = "19 Mar 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
 
-def get_username():
+def get_username() -> str:
     '''Get the current user's username.'''
     return getpass.getuser()
 
-def get_hostname():
+def get_hostname() -> str:
     '''Get the current computer's name.'''
     return os.uname().nodename
 
-def apply_prompt_customization():
+def apply_prompt_customization() -> str:
     '''Applies prompt customization.'''
     config = configparser.ConfigParser()
     config.read("config.ini")
     return config["Prompt"]["promptformat"]
 
-def execute_command(cmd, echo_result=True):
+def execute_command(cmd, echo_result=True) -> int:
     '''Executes a command in the computer's shell.
     cmd: str - command to run'''
     try:
         subprocess.run(cmd, shell=True, check=True)
         if echo_result:
             print(f"Success: {cmd}")
+            return 0
     except subprocess.CalledProcessError as e:
         print(f"Failed executing command: {cmd} (return code {e.returncode})")
+        return e.returncode
     finally:
         echo_result = True
 
-def check_for_config():
+def check_for_config() -> bool:
     '''Checks if config.ini is present.
     Returns True if config.ini is present, and False if not.'''
     try:
@@ -67,7 +69,7 @@ def check_for_config():
         print("Config file not found")
         return False
 
-def setup_config():
+def setup_config() -> None:
     '''Writes default values to config.ini, if it does not exist.'''
     global VERSION
     config_file_exists = check_for_config()
@@ -85,7 +87,7 @@ def setup_config():
     else:
         print("Config file found")
 
-def info(continue_prompt=True):
+def info(continue_prompt=True) -> None:
     '''Prints Parashell and system info.
     continue_prompt: bool (kwarg) - if True, displays continue prompt.'''
     global VERSION
@@ -106,7 +108,7 @@ def info(continue_prompt=True):
         input("[Enter] - Continue")
     continue_prompt = True
 
-def clear_screen():
+def clear_screen() -> None:
     '''Clears the screen.'''
     if platform.system() == "Windows":
         execute_command("cls", echo_result=False)
@@ -114,7 +116,7 @@ def clear_screen():
         # macOS or Linux
         execute_command("clear", echo_result=False)
 
-def get_dir_output():
+def get_dir_output() -> str:
     '''Get directory output.'''
     if platform.system() == "Windows":
         out = subprocess.check_output("dir", shell=True)
@@ -126,7 +128,7 @@ def get_dir_output():
     except UnicodeDecodeError as ue:
         return f"Error: Cannot get directory listing\n{ue}"
 
-def paginate_output(out):
+def paginate_output(out: str) -> list:
     '''Paginates a directory listing into 12 line pages.
     out: str - directory listing to paginate.'''
     if not out.startswith("Error"):
@@ -151,7 +153,7 @@ def paginate_output(out):
     else:
         return ["", "", out]
 
-def print_page(header, footer, pages, page_idx, cd):
+def print_page(header: str, footer: str, pages: list[str], page_idx: int, cd: str) -> None:
     '''Prints a directory listing page with header, footer and dividers.
     header: str - page header
     footer: str - page footer
@@ -192,7 +194,7 @@ def print_page(header, footer, pages, page_idx, cd):
     print('\n'.join(footer))
     print(f"{bottom_divider_msg:=^{columns}}")
 
-def process_cd(cmd):
+def process_cd(cmd) -> int:
     '''Processes a 'cd' command.
     cmd: str - full command, including `cd`'''
     try:
@@ -200,21 +202,21 @@ def process_cd(cmd):
         os.chdir(cl[1])
         page_idx = 0
         print(f"Success: changed directory to {cl[1]}")
-        return True
+        return 0
     except IndexError:
         print("Error: 1 argument required for cd.")
         input("[Enter] - Continue")
-        return False
+        return 1
     except FileNotFoundError:
         print("Error: Directory not found.")
         input("[Enter] - Continue")
-        return False
+        return 1
     except NotADirectoryError:
         print("Error: Not a directory.")
         input("[Enter] - Continue")
-        return False
+        return 1
 
-def process_goto(cmd):
+def process_goto(cmd) -> None:
     '''Processes a `goto` command.
     cmd: str - full command including `goto`'''
     try:
@@ -238,7 +240,7 @@ def process_goto(cmd):
         print(f"Error: Invalid page index")
         input("[Enter] - Continue")
 
-def refresh_page(page_idx):
+def refresh_page(page_idx) -> None:
     '''Refreshes the directory listing.
     page_idx: int - current page index'''
     clear_screen()
@@ -247,19 +249,19 @@ def refresh_page(page_idx):
     header, footer, pages = paginate_output(output)
     print_page(header, footer, pages, page_idx, cd)
 
-def main_loop():
+def main_loop() -> None:
     '''Main loop of Parashell.'''
     page_idx = 0
     refresh_page(page_idx)
     prompt_format = apply_prompt_customization()
     username = get_username()
     hostname = get_hostname()
-    cwd = os.getcwd() 
+    cwd = os.getcwd()
 
     while True:
         username = get_username()
         hostname = get_hostname()
-        cwd = os.getcwd() 
+        cwd = os.getcwd()
         prompt = prompt_format.format(username=username, hostname=hostname, cwd=cwd)
         cmd = input(f"{prompt} ")
         if cmd.startswith("cd"):
@@ -273,6 +275,7 @@ def main_loop():
             print("help - show this help")
             print("next - next page of dir listing")
             print("prev - previous page of dir listing")
+            print("refr - refresh dir listing")
             input("[Enter] - Continue")
         elif cmd == "show w":
             print("Refer to the GNU GPL, section 15 <https://www.gnu.org/licenses/>.")
@@ -296,11 +299,12 @@ def main_loop():
                 page_idx -= 1
         elif cmd.startswith("goto"):
             process_goto(cmd)
+        elif cmd == "refr":
+            refresh_page(page_idx)
         else:
             execute_command(cmd)
-            input("[Enter] - Continue")
 
-def main():
+def main() -> None:
     '''Starts Parashell.'''
 
     global DEV_STATE
