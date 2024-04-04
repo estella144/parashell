@@ -24,7 +24,7 @@ import shutil
 import subprocess
 import sys
 
-VERSION = "0.3.0.dev2"
+VERSION = "0.3.0.dev3"
 COMMIT = "b7db2b5"
 DATE = "19 Mar 2024"
 DEV_STATE_SHORT = ""
@@ -38,17 +38,49 @@ def get_hostname() -> str:
     '''Get the current computer's name.'''
     return os.uname().nodename
 
-def apply_prompt_customization() -> str:
-    '''Applies prompt customization.'''
+def shell_exists(shell_name) -> bool:
+    try:
+        subprocess.run(["which", shell_name], check=True, stdout=subprocess.PIPE)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+def get_shell_path(shell_name) -> str:
+    return shutil.which("zsh")
+
+def get_best_shell() -> str:
+    '''Get the best shell for the current machine.'''
+    if platform.system() == 'Windows':
+        return "C:\\Windows\\System32\\cmd.exe"
+    else:
+        if shell_exists("zsh"):
+            print("zsh found")
+            return get_shell_path("zsh")
+        elif shell_exists("bash"):
+            print("bash found")
+            return get_shell_path("bash")
+        else:
+            print("zsh and bash not found, defaulting to sh")
+            return get_shell_path("sh")
+
+def get_custom_prompt() -> str:
+    '''Reads custom prompt from config file and returns it as a string'''
     config = configparser.ConfigParser()
     config.read("config.ini")
-    return config["Prompt"]["promptformat"]
+    return config["Prompt"]["PromptFormat"]
+
+def get_custom_shell() -> str:
+    '''Reads custom shell from config file and returns it as a string'''
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    return config["Shell"]["Shell"]
 
 def execute_command(cmd, echo_result=True) -> int:
     '''Executes a command in the computer's shell.
     cmd: str - command to run'''
+    shell = get_custom_shell()
     try:
-        subprocess.run(cmd, shell=True, check=True)
+        subprocess.run(cmd, shell=True, check=True, executable=shell)
         if echo_result:
             print(f"Success: {cmd}")
             return 0
@@ -82,6 +114,8 @@ def setup_config() -> None:
         config["Version"] = {"ParashellVersion": VERSION}
         config["CmdAliases"] = {}
         config["Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}"}
+        if platform.system() != "Windows":
+            config["Shell"] = {"Shell": get_best_shell()}
         with open('config.ini', mode='w', encoding="utf-8") as f:
             config.write(f)
     else:
@@ -253,7 +287,8 @@ def main_loop() -> None:
     '''Main loop of Parashell.'''
     page_idx = 0
     refresh_page(page_idx)
-    prompt_format = apply_prompt_customization()
+    prompt_format = get_custom_prompt()
+    shell = get_custom_shell()
     username = get_username()
     hostname = get_hostname()
     cwd = os.getcwd()
@@ -274,8 +309,9 @@ def main_loop() -> None:
             print("info - show Parashell info")
             print("help - show this help")
             print("next - next page of dir listing")
-            print("prev - previous page of dir listing")
+            print("prev - previous  page of dir listing")
             print("refr - refresh dir listing")
+            print("shll - show current shell path")
             input("[Enter] - Continue")
         elif cmd == "show w":
             print("Refer to the GNU GPL, section 15 <https://www.gnu.org/licenses/>.")
@@ -301,6 +337,8 @@ def main_loop() -> None:
             process_goto(cmd)
         elif cmd == "refr":
             refresh_page(page_idx)
+        elif cmd == "shll":
+            print(get_custom_shell())
         else:
             execute_command(cmd)
 
