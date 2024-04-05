@@ -46,7 +46,7 @@ def shell_exists(shell_name) -> bool:
         return False
 
 def get_shell_path(shell_name) -> str:
-    return shutil.which("zsh")
+    return shutil.which(shell_name)
 
 def get_best_shell() -> str:
     '''Get the best shell for the current machine.'''
