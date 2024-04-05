@@ -24,9 +24,9 @@ import shutil
 import subprocess
 import sys
 
-VERSION = "0.3.0.dev3"
-COMMIT = "b7db2b5"
-DATE = "19 Mar 2024"
+VERSION = "0.3.0"
+COMMIT = "acd0b67"
+DATE = "05 Apr 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
 
@@ -336,15 +336,15 @@ def main_loop() -> None:
         elif cmd == "next":
             if page_idx == len(pages)-2:
                 print("Error: No more pages to display")
-                input("[Enter] - Continue")
             else:
                 page_idx += 1
+                refresh_page(page_idx)
         elif cmd == "prev":
             if page_idx == 0:
                 print("Error: No more pages to display")
-                input("[Enter] - Continue")
             else:
                 page_idx -= 1
+                refresh_page(page_idx)
         elif cmd.startswith("goto"):
             process_goto(cmd, len(pages))
         elif cmd == "refr":
