@@ -67,13 +67,23 @@ def get_custom_prompt() -> str:
     '''Reads custom prompt from config file and returns it as a string'''
     config = configparser.ConfigParser()
     config.read("config.ini")
-    return config["Prompt"]["PromptFormat"]
+    try:
+        return config["Prompt"]["PromptFormat"]
+    except KeyError:
+        print("Error: Prompt key not found. Your config.ini may be out of date.")
+        print("       Delete your config.ini file and restart ParaShell.")
+        return get_best_shell()
 
 def get_custom_shell() -> str:
     '''Reads custom shell from config file and returns it as a string'''
     config = configparser.ConfigParser()
     config.read("config.ini")
-    return config["Shell"]["Shell"]
+    try:
+        return config["Shell"]["Shell"]
+    except KeyError:
+        print("Error: Shell key not found. Your config.ini may be out of date.")
+        print("       Delete your config.ini file and restart ParaShell.")
+        return get_best_shell()
 
 def execute_command(cmd, echo_result=True) -> int:
     '''Executes a command in the computer's shell.
@@ -250,7 +260,7 @@ def process_cd(cmd) -> int:
         input("[Enter] - Continue")
         return 1
 
-def process_goto(cmd) -> None:
+def process_goto(cmd, pages) -> None:
     '''Processes a `goto` command.
     cmd: str - full command including `goto`'''
     try:
@@ -274,7 +284,7 @@ def process_goto(cmd) -> None:
         print(f"Error: Invalid page index")
         input("[Enter] - Continue")
 
-def refresh_page(page_idx) -> None:
+def refresh_page(page_idx) -> list:
     '''Refreshes the directory listing.
     page_idx: int - current page index'''
     clear_screen()
@@ -282,11 +292,13 @@ def refresh_page(page_idx) -> None:
     output = get_dir_output()
     header, footer, pages = paginate_output(output)
     print_page(header, footer, pages, page_idx, cd)
+    return [header, footer, pages, page_idx, cd]
 
 def main_loop() -> None:
     '''Main loop of Parashell.'''
     page_idx = 0
-    refresh_page(page_idx)
+    dir_data = refresh_page(page_idx)
+    pages = dir_data[2]
     prompt_format = get_custom_prompt()
     shell = get_custom_shell()
     username = get_username()
@@ -334,7 +346,7 @@ def main_loop() -> None:
             else:
                 page_idx -= 1
         elif cmd.startswith("goto"):
-            process_goto(cmd)
+            process_goto(cmd, len(pages))
         elif cmd == "refr":
             refresh_page(page_idx)
         elif cmd == "shll":
