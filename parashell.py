@@ -85,10 +85,9 @@ def get_custom_shell() -> str:
         print("       Delete your config.ini file and restart ParaShell.")
         return get_best_shell()
 
-def execute_command(cmd, echo_result=True) -> int:
+def execute_command(cmd, echo_result=True, shell=get_custom_shell()) -> int:
     '''Executes a command in the computer's shell.
     cmd: str - command to run'''
-    shell = get_custom_shell()
     try:
         subprocess.run(cmd, shell=True, check=True, executable=shell)
         if echo_result:
@@ -352,7 +351,7 @@ def main_loop() -> None:
         elif cmd == "shll":
             print(get_custom_shell())
         else:
-            execute_command(cmd)
+            execute_command(cmd, shell=shell)
 
 def main() -> None:
     '''Starts Parashell.'''
