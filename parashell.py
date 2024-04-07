@@ -24,6 +24,8 @@ import shutil
 import subprocess
 import sys
 
+from gitinter import *
+
 VERSION = "0.3.0"
 COMMIT = "acd0b67"
 DATE = "05 Apr 2024"
