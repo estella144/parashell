@@ -1,6 +1,7 @@
 /build
 /compile_scripts
 /dist
+/__pycache__
 parashell*.spec
 .python-version
 config.ini
