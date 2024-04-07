@@ -87,7 +87,7 @@ def gitui_mainmenu() -> None:
     print("[B] - Branches and Tags")
     print("[C] - Collaborate")
     print("[Q] - Quit")
-    
+
     while True:
         choice = input(f"{_get_current_branch()}> ").lower()
         if choice == "w":
@@ -100,6 +100,7 @@ def gitui_mainmenu() -> None:
             gitui_collabmenu()
         elif choice == "q":
             print("Leaving Parashell GitUI...")
+            break
         else:
             print("Error: Invalid choice")
 
