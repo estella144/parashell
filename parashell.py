@@ -171,10 +171,10 @@ def get_dir_output() -> str:
     '''Get directory output.'''
     try:
         if platform.system() == "Windows":
-            out = subprocess.check_output("dir", shell=True)
+            out = subprocess.check_output("dir", shell=True, executable=get_best_shell())
         else:
             # macOS or Linux
-            out = subprocess.check_output("ls -l", shell=True)
+            out = subprocess.check_output("ls -l", shell=True, executable=get_best_shell())
         return out.decode("utf-8")
     except UnicodeDecodeError as ue:
         return f"Error: Cannot get directory listing\n{ue}"
@@ -225,17 +225,20 @@ def print_page(header: str, footer: str, pages: list[str], page_idx: int, cd: st
     else:
         left_arrow = ""
 
-    if page_idx != len(pages)-2:
+    if page_idx != len(pages)-1:
         right_arrow = " >"
     else:
         right_arrow = ""
 
     if not type(pages) == str:
-        current_page = pages[page_idx]
+        try:
+            current_page = pages[page_idx]
+        except IndexError:
+            current_page = ["Error: Directory listing page out of range"]
     else:
         current_page = pages
     top_divider_msg = f"[Parashell {VERSION} - {cd}]"
-    bottom_divider_msg = f"[{left_arrow}Page {page_idx+1} of {len(pages)-1}{right_arrow}]"
+    bottom_divider_msg = f"[{left_arrow}Page {page_idx+1} of {len(pages)}{right_arrow}]"
 
     print(f"{top_divider_msg:=^{columns}}")
     print(f"{WARNING_SHORT:-^{columns}}")
@@ -343,7 +346,7 @@ def main_loop() -> None:
         elif cmd == "exit":
             break
         elif cmd == "next":
-            if page_idx == len(pages)-2:
+            if page_idx == len(pages)-1:
                 print("Error: No more pages to display")
             else:
                 page_idx += 1
