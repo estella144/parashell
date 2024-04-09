@@ -24,7 +24,7 @@ import shutil
 import subprocess
 import sys
 
-VERSION = "0.3.0"
+VERSION = "0.3.2.dev1"
 COMMIT = "acd0b67"
 DATE = "05 Apr 2024"
 DEV_STATE_SHORT = ""
@@ -36,11 +36,17 @@ def get_username() -> str:
 
 def get_hostname() -> str:
     '''Get the current computer's name.'''
-    return os.uname().nodename
+    if platform.system() == 'Windows':
+        return os.environ['COMPUTERNAME']
+    else:
+        return os.uname().nodename
 
 def shell_exists(shell_name) -> bool:
     try:
-        subprocess.run(["which", shell_name], check=True, stdout=subprocess.PIPE)
+        which_command = "which"
+        if platform.system() == "Windows":
+            which_command = "where"
+        subprocess.run([which_command, shell_name], check=True, stdout=subprocess.PIPE)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -51,6 +57,8 @@ def get_shell_path(shell_name) -> str:
 def get_best_shell() -> str:
     '''Get the best shell for the current machine.'''
     if platform.system() == 'Windows':
+        if shell_exists("powershell"):
+            return "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
         return "C:\\Windows\\System32\\cmd.exe"
     else:
         if shell_exists("zsh"):
@@ -161,15 +169,17 @@ def clear_screen() -> None:
 
 def get_dir_output() -> str:
     '''Get directory output.'''
-    if platform.system() == "Windows":
-        out = subprocess.check_output("dir", shell=True)
-    else:
-        # macOS or Linux
-        out = subprocess.check_output("ls -l", shell=True)
     try:
+        if platform.system() == "Windows":
+            out = subprocess.check_output("dir", shell=True)
+        else:
+            # macOS or Linux
+            out = subprocess.check_output("ls -l", shell=True)
         return out.decode("utf-8")
     except UnicodeDecodeError as ue:
         return f"Error: Cannot get directory listing\n{ue}"
+    except subprocess.CalledProcessError as err:
+        return f"Error: Cannot get directory listing\n{err}"
 
 def paginate_output(out: str) -> list:
     '''Paginates a directory listing into 12 line pages.
