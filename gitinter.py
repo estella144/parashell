@@ -18,12 +18,13 @@
 ##    You should have received a copy of the GNU General Public License
 ##    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import platform
 import shutil
 import subprocess
 
 VERSION = "0.3.1.dev1"
-COMMIT = "aaab602"
-DATE = "07 Apr 2024"
+COMMIT = "550c7da"
+DATE = "10 Apr 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
 
@@ -61,8 +62,16 @@ def _get_git_log(num_commits: int) -> str:
     pretty_flag = '--pretty=format:%h | %ar | %s'
     return str(subprocess.check_output(['git', 'log', pretty_flag, n_flag]), 'utf-8')
 
+def _clear_screen() -> None:
+    '''Clears the screen.'''
+    if platform.system() == "Windows":
+        execute_command("cls", echo_result=False)
+    else:
+        # macOS or Linux
+        execute_command("clear", echo_result=False)
+
 def gitui_addmenu() -> None:
-    path = input("Please enter a pathspec to add to staged changes: ")
+    path = input("Pathspec to add to staged changes: ")
     try:
         subprocess.run(['git', 'add', path], check=True)
         print(f"Successfully added {path}")
@@ -70,10 +79,56 @@ def gitui_addmenu() -> None:
         print(f"Failed to add {path}: {err}")
 
 def gitui_movemenu() -> None:
-    raise NotImplementedError
+    source = input("Source file to move: ")
+    destination = input("Destination directory or path: ")
+    try:
+        subprocess.run(['git', 'move', source, destination], check=True)
+        print(f"Successfully moved {source} to {destination}")
+    except subprocess.CalledProcessError as err:
+        print(f"Failed to move {source} to {destination}: {err}")
 
 def gitui_restoremenu() -> None:
-    raise NotImplementedError
+    print("Select an option below:")
+    print("[U] - Unstage")
+    print("[R] - Restore")
+    print("[C] - Restore from Commit")
+    print("[D] - Discard Untracked Files")
+
+    while True:
+        choice = input(f"[restore] {_get_current_repo_name()} on {_get_current_branch()}> ").lower()
+        if choice == "u":
+            path = input("Pathspec to unstage changes to: ")
+            try:
+                subprocess.run(["git", "restore", "--staged", path], check=True)
+                print(f"Successfully unstaged changes to {path}")
+            except subprocess.CalledProcessError as err:
+                print(f"Failed to unstage changes to {path}: {err}")
+        elif choice == "r":
+            path = input("Pathspec to restore to last commit: ")
+            try:
+                subprocess.run(["git", "restore", path], check=True)
+                print(f"Successfully restored {path}")
+            except subprocess.CalledProcessError as err:
+                print(f"Failed to restore {path}: {err}")
+        elif choice == "c":
+            path = input("Pathspec to restore: ")
+            print("Hint: Type HEAD~# to reference a commit relatively.")
+            print("hint: This means # commits ago (from HEAD).")
+            commit = input("Commit to restore file from: ")
+            source_flag = f"--source={commit}"
+            try:
+                subprocess.run(["git", "restore", "--staged", path], check=True)
+                print(f"Successfully unstaged changes to {path}")
+            except subprocess.CalledProcessError as err:
+                print(f"Failed to unstage changes to {path}: {err}")
+        elif choice == "d":
+            try:
+                subprocess.run(["git", "restore", "--source=HEAD", "--staged", "."], check=True)
+                print(f"Successfully unstaged changes to {path}")
+            except subprocess.CalledProcessError as err:
+                print(f"Failed to unstage changes to {path}: {err}")
+        else:
+            print("Nothing chosen, nothing restored")
 
 def gitui_removemenu() -> None:
     raise NotImplementedError
@@ -82,10 +137,11 @@ def gitui_commitmenu() -> None:
     raise NotImplementedError
 
 def gitui_workmenu() -> None:
+    _clear_screen()
     gitui_printpage()
 
     print("Select an option below:")
-    print("[A] - Add")
+    print("[A] - Add - Stage Changes")
     print("[M] - Move")
     print("[R] - Restore")
     print("[V] - Remove")
@@ -107,7 +163,6 @@ def gitui_workmenu() -> None:
             break
         elif choice == "q":
             quit()
-        
 
 def gitui_revmenu() -> None:
     raise NotImplementedError
@@ -133,6 +188,7 @@ def gitui_printpage() -> None:
     print('='*columns)
 
 def gitui_mainmenu() -> None:
+    _clear_screen()
     gitui_printpage()
 
     print("Select an option below:")
