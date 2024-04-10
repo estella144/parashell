@@ -2,7 +2,11 @@
 
 ![GitHub Release](https://img.shields.io/github/v/release/estella144/parashell?include_prereleases)
 ![GitHub last commit](https://img.shields.io/github/last-commit/estella144/parashell)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/estella144/parashell)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/estella144/parashell)
+
+![GitHub License](https://img.shields.io/github/license/estella144/parashell)
+
 
 A shell in Python.
 
