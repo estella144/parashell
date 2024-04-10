@@ -37,13 +37,17 @@ def _head_detached() -> bool:
     except subprocess.CalledProcessError:
         return True
 
+def _get_current_repo_name() -> str:
+    current_repo_path = str(subprocess.check_output(['git', 'rev-parse', '--show-toplevel']), 'utf-8')
+    return current_repo_path.split(sep="/")[-1].strip()
+
 def _get_current_commit_hash() -> str:
     return str(subprocess.check_output(['git', 'rev-parse', 'HEAD']), 'utf-8')
 
 def _get_current_branch() -> str:
     current_branch = str(subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']), 'utf-8')
     current_branch = current_branch.strip()
-    if current_branch == "HEAD":
+    if _head_detached():
         hash = _get_current_commit_hash()
         hash_abbrev = hash[0:6]
         return(f"detached at {hash_abbrev}")
@@ -57,8 +61,48 @@ def _get_git_log(num_commits: int) -> str:
     pretty_flag = '--pretty=format:%h | %ar | %s'
     return str(subprocess.check_output(['git', 'log', pretty_flag, n_flag]), 'utf-8')
 
-def gitui_workmenu() -> None:
+def gitui_addmenu() -> None:
     raise NotImplementedError
+
+def gitui_movemenu() -> None:
+    raise NotImplementedError
+
+def gitui_restoremenu() -> None:
+    raise NotImplementedError
+
+def gitui_removemenu() -> None:
+    raise NotImplementedError
+
+def gitui_commitmenu() -> None:
+    raise NotImplementedError
+
+def gitui_workmenu() -> None:
+    gitui_printpage()
+
+    print("Select an option below:")
+    print("[A] - Add")
+    print("[M] - Move")
+    print("[R] - Restore")
+    print("[V] - Remove")
+    print("[C] - Commit")
+    print("[B] - Back to main menu")
+    print("[Ctrl-C] - Quit")
+
+    while True:
+        choice = input(f"{_get_current_repo_name()} on {_get_current_branch()}> ").lower()
+        if choice == "A":
+            gitui_addmenu()
+        elif choice == "M":
+            gitui_movemenu()
+        elif choice == "R":
+            gitui_restoremenu()
+        elif choice == "C":
+            gitui_commitmenu()
+        elif choice == "B":
+            break
+        elif choice == "Q":
+            quit()
+        
 
 def gitui_revmenu() -> None:
     raise NotImplementedError
@@ -69,9 +113,11 @@ def gitui_branchmenu() -> None:
 def gitui_collabmenu() -> None:
     raise NotImplementedError
 
-def gitui_mainmenu() -> None:
+def gitui_printpage() -> None:
     columns, lines = shutil.get_terminal_size()
-    top_divider_msg = f"[Parashell GitUI {VERSION}]"
+    repo_name = _get_current_repo_name()
+    branch = _get_current_branch()
+    top_divider_msg = f"[Parashell GitUI {VERSION} - {repo_name} on {branch}]"
     top2_divider_msg = f"[Warning: {DEV_STATE} version. Bugs may be present.]"
 
     print(f"{top_divider_msg:=^{columns}}")
@@ -81,15 +127,18 @@ def gitui_mainmenu() -> None:
     print(_get_git_log(6))
     print('='*columns)
 
+def gitui_mainmenu() -> None:
+    gitui_printpage()
+
     print("Select an option below:")
     print("[W] - Work")
     print("[R] - Revisions")
     print("[B] - Branches and Tags")
     print("[C] - Collaborate")
-    print("[Q] - Quit")
+    print("[Ctrl-C] - Quit")
 
     while True:
-        choice = input(f"{_get_current_branch()}> ").lower()
+        choice = input(f"{_get_current_repo_name()} on {_get_current_branch()}> ").lower()
         if choice == "w":
             gitui_workmenu()
         elif choice == "r":
@@ -100,9 +149,12 @@ def gitui_mainmenu() -> None:
             gitui_collabmenu()
         elif choice == "q":
             print("Leaving Parashell GitUI...")
-            break
+            quit()
         else:
             print("Error: Invalid choice")
 
 if __name__ == "__main__":
-    gitui_mainmenu()
+    if _git_exists():
+        gitui_mainmenu()
+    else:
+        print("Error: Git not installed. Please install Git to continue.")
