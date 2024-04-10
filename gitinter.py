@@ -62,7 +62,12 @@ def _get_git_log(num_commits: int) -> str:
     return str(subprocess.check_output(['git', 'log', pretty_flag, n_flag]), 'utf-8')
 
 def gitui_addmenu() -> None:
-    raise NotImplementedError
+    path = input("Please enter a pathspec to add to staged changes: ")
+    try:
+        subprocess.run(['git', 'add', path], check=True)
+        print(f"Successfully added {path}")
+    except subprocess.CalledProcessError as err:
+        print(f"Failed to add {path}: {err}")
 
 def gitui_movemenu() -> None:
     raise NotImplementedError
@@ -90,17 +95,17 @@ def gitui_workmenu() -> None:
 
     while True:
         choice = input(f"{_get_current_repo_name()} on {_get_current_branch()}> ").lower()
-        if choice == "A":
+        if choice == "a":
             gitui_addmenu()
-        elif choice == "M":
+        elif choice == "m":
             gitui_movemenu()
-        elif choice == "R":
+        elif choice == "r":
             gitui_restoremenu()
-        elif choice == "C":
+        elif choice == "c":
             gitui_commitmenu()
-        elif choice == "B":
+        elif choice == "b":
             break
-        elif choice == "Q":
+        elif choice == "q":
             quit()
         
 
