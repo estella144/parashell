@@ -317,6 +317,7 @@ def main_loop() -> None:
             refresh_page(page_idx)
         elif cmd == "help":
             print("Type any command you would normally type in your console/shell.")
+            print("gitui - open Parashell GitUI")
             print("exit - exit Parashell")
             print("goto - go to specific page of dir listing")
             print("info - show Parashell info")
@@ -352,6 +353,8 @@ def main_loop() -> None:
             refresh_page(page_idx)
         elif cmd == "shll":
             print(get_custom_shell())
+        elif cmd == "gitui":
+            gitui_mainmenu()
         else:
             execute_command(cmd, shell=shell)
 
