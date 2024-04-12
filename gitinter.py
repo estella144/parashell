@@ -209,6 +209,8 @@ def gitui_workmenu() -> None:
             gitui_movemenu()
         elif choice == "r":
             gitui_restoremenu()
+        elif choice == "v":
+            gitui_removemenu()
         elif choice == "c":
             gitui_commitmenu()
         elif choice == "b":
