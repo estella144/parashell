@@ -173,6 +173,21 @@ def gitui_commitmenu() -> None:
         except subprocess.CalledProcessError as err:
             print(f"Failed to commit changes: {err}")
 
+def gitui_bisectmenu() -> None:
+    raise NotImplementedError
+
+def gitui_diffmenu() -> None:
+    raise NotImplementedError
+
+def gitui_grepmenu() -> None:
+    raise NotImplementedError
+
+def gitui_logmenu() -> None:
+    raise NotImplementedError
+
+def gitui_showmenu() -> None:
+    raise NotImplementedError
+
 def gitui_workmenu() -> None:
     _clear_screen()
     gitui_printpage()
@@ -202,7 +217,32 @@ def gitui_workmenu() -> None:
             quit()
 
 def gitui_revmenu() -> None:
-    raise NotImplementedError
+    _clear_screen()
+    gitui_printpage()
+
+    print("Select an option below:")
+    print("[I] - Bisect")
+    print("[D] - Diff")
+    print("[G] - Grep")
+    print("[L] - Log")
+    print("[S] - Show")
+    print("[B] - Back to main menu")
+    print("[Ctrl-C] - Quit")
+
+    while True:
+        choice = input(f"{_get_current_repo_name()} on {_get_current_branch()}> ").lower()
+        if choice == "i":
+            gitui_bisectmenu()
+        elif choice == "d":
+            gitui_diffmenu()
+        elif choice == "g":
+            gitui_grepmenu()
+        elif choice == "l":
+            gitui_logmenu()
+        elif choice == "s":
+            gitui_showmenu()
+        elif choice == "b":
+            gitui_mainmenu()
 
 def gitui_branchmenu() -> None:
     raise NotImplementedError
