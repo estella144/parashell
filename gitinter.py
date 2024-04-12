@@ -28,6 +28,20 @@ DATE = "10 Apr 2024"
 DEV_STATE_SHORT = ""
 DEV_STATE = "development"
 
+def _execute_command(cmd, echo_result=True) -> int:
+    '''Executes a command in the computer's shell.
+    cmd: str - command to run'''
+    try:
+        subprocess.run(cmd, shell=True, check=True)
+        if echo_result:
+            print(f"Success: {cmd}")
+            return 0
+    except subprocess.CalledProcessError as e:
+        print(f"Failed executing command: {cmd} (return code {e.returncode})")
+        return e.returncode
+    finally:
+        echo_result = True
+
 def _git_exists() -> bool:
     return (shutil.which("git") != None)
 
@@ -62,13 +76,20 @@ def _get_git_log(num_commits: int) -> str:
     pretty_flag = '--pretty=format:%h | %ar | %s'
     return str(subprocess.check_output(['git', 'log', pretty_flag, n_flag]), 'utf-8')
 
+def _git_push():
+    try:
+        subprocess.run(['git', 'push'], check=True)
+        print("Successfully pushed to remote")
+    except subprocess.CalledProcessError as err:
+        print(f"Failed to push to remote: {err}")
+
 def _clear_screen() -> None:
     '''Clears the screen.'''
     if platform.system() == "Windows":
-        execute_command("cls", echo_result=False)
+        _execute_command("cls", echo_result=False)
     else:
         # macOS or Linux
-        execute_command("clear", echo_result=False)
+        _execute_command("clear", echo_result=False)
 
 def gitui_addmenu() -> None:
     path = input("Pathspec to add to staged changes: ")
@@ -131,10 +152,26 @@ def gitui_restoremenu() -> None:
             print("Nothing chosen, nothing restored")
 
 def gitui_removemenu() -> None:
-    raise NotImplementedError
+    path = input("File(s) to remove: ")
+    try:
+        subprocess.run(['git', 'rm', path], check=True)
+        print(f"Successfully removed {path}")
+    except subprocess.CalledProcessError as err:
+        print(f"Failed to remove {path}: {err}")
 
 def gitui_commitmenu() -> None:
-    raise NotImplementedError
+    print(_get_git_status())
+    check = input("Are you sure you want to commit all staged changes? [y/n] ")
+    if check.lower() == "y":
+        message = input("Commit message: ")
+        try:
+            subprocess.run(['git', 'commit', '-m', message], check=True)
+            print("Successfully committed changes")
+            push = input("Push changes to remote? [y/n] ")
+            if push.lower() == "y":
+                _git_push()
+        except subprocess.CalledProcessError as err:
+            print(f"Failed to commit changes: {err}")
 
 def gitui_workmenu() -> None:
     _clear_screen()
@@ -160,7 +197,7 @@ def gitui_workmenu() -> None:
         elif choice == "c":
             gitui_commitmenu()
         elif choice == "b":
-            break
+            gitui_mainmenu()
         elif choice == "q":
             quit()
 
