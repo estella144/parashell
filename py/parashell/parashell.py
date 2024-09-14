@@ -24,7 +24,11 @@ import shutil
 import subprocess
 import sys
 
-import gitinter
+import parashell.customisation
+import parashell.fileops
+import parashell.gitinter
+import parashell.navigation
+import parashell.utils
 
 VERSION = "0.3.0"
 COMMIT = "acd0b67"
