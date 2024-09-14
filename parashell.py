@@ -65,6 +65,37 @@ def get_best_shell() -> str:
             print("zsh and bash not found, defaulting to sh")
             return get_shell_path("sh")
 
+def get_shell_choice() -> str:
+    windows_shells = [("cmd", "C:\\Windows\\System32\\cmd.exe"),
+                      ("powershell", "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe")]
+    shells = [("zsh", "/bin/zsh"),
+              ("bash", "/bin/bash"),
+              ("sh", "/bin/sh")]
+
+    if platform.system() == "Windows":
+        i = 1
+        print(f"0. Best shell ({get_best_shell()})")
+        for shell in windows_shells:
+            print(f"{i}. {shell[0]} ({shell[1]})")
+            i += 1
+        shell_number = int(input("Enter shell number: "))
+        if shell_number == 0:
+            return get_best_shell()
+        else:
+            return windows_shells[shell_number-1][1]
+    else:
+        i = 1
+        print(f"0. Best shell ({get_best_shell()})")
+        for shell in shells:
+            print(f"{i}. {shell[0]} ({shell[1]})")
+            i += 1
+        shell_number = int(input("Enter shell number: "))
+        if shell_number == 0:
+            return get_best_shell()
+        else:
+            return shells[shell_number-1][1]
+
+
 def get_custom_prompt(parashell_dir) -> str:
     '''Reads custom prompt from config file and returns it as a string'''
     config = configparser.ConfigParser()
@@ -85,7 +116,7 @@ def get_custom_shell(parashell_dir) -> str:
     except KeyError:
         print("Error: Shell key not found. Your config.ini may be out of date.")
         print("       Delete your config.ini file and restart ParaShell.")
-        return get_best_shell()
+        return get_shell_choice()
 
 def execute_command(
         cmd, echo_result=True, shell=get_custom_shell(os.getcwd())) -> int:
@@ -126,7 +157,7 @@ def setup_config() -> None:
         config["Version"] = {"ParashellVersion": VERSION}
         config["Language"] = {"Language": "en-US"}
         config["CmdAliases"] = {}
-        config["Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}"}
+        config["Prompt"] = {"PromptFormat": "[{shell}] {username}@{hostname}:{cwd}"}
         if platform.system() != "Windows":
             config["Shell"] = {"Shell": get_best_shell()}
         with open('config.ini', mode='w', encoding="utf-8") as f:
@@ -330,8 +361,10 @@ def main_loop(parashell_dir) -> None:
         username = get_username()
         hostname = get_hostname()
         cwd = os.getcwd()
-        prompt = prompt_format.format(username=username,
-                                      hostname=hostname, cwd=cwd)
+        prompt = prompt_format.format(
+            username=username,
+            hostname=hostname, cwd=cwd,
+            shell=get_custom_shell(parashell_dir))
         cmd = input(f"{prompt} ")
         if cmd.startswith("cd"):
             process_cd(cmd)
