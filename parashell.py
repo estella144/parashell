@@ -38,7 +38,10 @@ def get_username() -> str:
 
 def get_hostname() -> str:
     '''Get the current computer's name.'''
-    return os.uname().nodename
+    try:
+        return os.uname().nodename
+    except AttributeError:
+        return platform.uname().nodename
 
 def shell_exists(shell_name) -> bool:
     try:
