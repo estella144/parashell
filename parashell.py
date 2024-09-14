@@ -149,6 +149,17 @@ def info(continue_prompt=True) -> None:
     elif platform.system() == "Darwin":
         release, versioninfo, machine = platform.mac_ver()
         print(f"macOS:    {release} on {machine}")
+    elif platform.system() == "Linux":
+        try:
+            os_release_info = platform.freedesktop_os_release()
+            if ((not os_release_info["ID"])
+                and os_release_info["ID_LIKE"]):
+                os_release_info["ID"] = os_release_info["ID_LIKE"]
+        except OSError:
+            os_release_info = {"NAME": "Unknown",
+                               "ID": "unknown",
+                               "PRETTY_NAME": "Unknown"}
+        print(f"Linux:    {os_release_info['PRETTY_NAME']}")
     if continue_prompt:
         input("[Enter] - Continue")
     continue_prompt = True
