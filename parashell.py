@@ -24,7 +24,7 @@ import shutil
 import subprocess
 import sys
 
-from gitinter import *
+import gitinter
 
 VERSION = "0.3.0"
 COMMIT = "acd0b67"
@@ -65,10 +65,10 @@ def get_best_shell() -> str:
             print("zsh and bash not found, defaulting to sh")
             return get_shell_path("sh")
 
-def get_custom_prompt() -> str:
+def get_custom_prompt(parashell_dir) -> str:
     '''Reads custom prompt from config file and returns it as a string'''
     config = configparser.ConfigParser()
-    config.read("config.ini")
+    config.read(os.path.join(parashell_dir, "config.ini"))
     try:
         return config["Prompt"]["PromptFormat"]
     except KeyError:
@@ -76,10 +76,10 @@ def get_custom_prompt() -> str:
         print("       Delete your config.ini file and restart ParaShell.")
         return get_best_shell()
 
-def get_custom_shell() -> str:
+def get_custom_shell(parashell_dir) -> str:
     '''Reads custom shell from config file and returns it as a string'''
     config = configparser.ConfigParser()
-    config.read("config.ini")
+    config.read(os.path.join(parashell_dir, "config.ini"))
     try:
         return config["Shell"]["Shell"]
     except KeyError:
@@ -87,7 +87,8 @@ def get_custom_shell() -> str:
         print("       Delete your config.ini file and restart ParaShell.")
         return get_best_shell()
 
-def execute_command(cmd, echo_result=True, shell=get_custom_shell()) -> int:
+def execute_command(
+        cmd, echo_result=True, shell=get_custom_shell(os.getcwd())) -> int:
     '''Executes a command in the computer's shell.
     cmd: str - command to run'''
     try:
@@ -123,6 +124,7 @@ def setup_config() -> None:
         config = configparser.ConfigParser()
         config.read('config.ini')
         config["Version"] = {"ParashellVersion": VERSION}
+        config["Language"] = {"Language": "en-US"}
         config["CmdAliases"] = {}
         config["Prompt"] = {"PromptFormat": "{username}@{hostname}:{cwd}"}
         if platform.system() != "Windows":
@@ -173,14 +175,14 @@ def clear_screen() -> None:
         execute_command("clear", echo_result=False)
 
 def get_dir_output() -> str:
-    '''Get directory output.'''
+    '''Get directory output as a string.'''
     if platform.system() == "Windows":
-        out = subprocess.check_output("dir", shell=True)
+        out = subprocess.run("dir", shell=True, capture_output=True)
     else:
         # macOS or Linux
-        out = subprocess.check_output("ls -l", shell=True)
+        out = subprocess.run("ls -l", shell=True, capture_output=True)
     try:
-        return out.decode("utf-8")
+        return str(out.stdout, "utf-8")
     except UnicodeDecodeError as ue:
         return f"Error: Cannot get directory listing\n{ue}"
 
@@ -209,7 +211,9 @@ def paginate_output(out: str) -> list:
     else:
         return ["", "", out]
 
-def print_page(header: str, footer: str, pages: list[str], page_idx: int, cd: str) -> None:
+def print_page(
+        header: str, footer: str, pages: list[str], page_idx: int,
+        cd: str) -> None:
     '''Prints a directory listing page with header, footer and dividers.
     header: str - page header
     footer: str - page footer
@@ -306,37 +310,44 @@ def refresh_page(page_idx) -> list:
     print_page(header, footer, pages, page_idx, cd)
     return [header, footer, pages, page_idx, cd]
 
-def main_loop() -> None:
-    '''Main loop of Parashell.'''
+def apply_customisation(parashell_dir) -> dict:
+    cwd = os.getcwd()
+    prompt_format = get_custom_prompt(parashell_dir)
+    shell = get_custom_shell(parashell_dir)
+    return {"prompt_format": prompt_format, "shell": shell}
+
+def main_loop(parashell_dir) -> None:
+    '''Main loop of Parashell.
+    '''
     page_idx = 0
     dir_data = refresh_page(page_idx)
     pages = dir_data[2]
-    prompt_format = get_custom_prompt()
-    shell = get_custom_shell()
-    username = get_username()
-    hostname = get_hostname()
-    cwd = os.getcwd()
+    settings = apply_customisation(parashell_dir)
+    prompt_format = settings["prompt_format"]
+    shell = settings["shell"]
 
     while True:
         username = get_username()
         hostname = get_hostname()
         cwd = os.getcwd()
-        prompt = prompt_format.format(username=username, hostname=hostname, cwd=cwd)
+        prompt = prompt_format.format(username=username,
+                                      hostname=hostname, cwd=cwd)
         cmd = input(f"{prompt} ")
         if cmd.startswith("cd"):
             process_cd(cmd)
             refresh_page(page_idx)
         elif cmd == "help":
-            print("Type any command you would normally type in your console/shell.")
-            print("gitui - open Parashell GitUI")
-            print("exit - exit Parashell")
-            print("goto - go to specific page of dir listing")
-            print("info - show Parashell info")
-            print("help - show this help")
-            print("next - next page of dir listing")
-            print("prev - previous  page of dir listing")
-            print("refr - refresh dir listing")
-            print("shll - show current shell path")
+            print("Type any command you would normally type in your "
+                  "console/shell.")
+            print("gitui   open Parashell GitUI")
+            print("exit    exit Parashell")
+            print("goto    go to specific page of dir listing")
+            print("info    show Parashell info")
+            print("help    show this help")
+            print("next    next page of dir listing")
+            print("prev    previous page of dir listing")
+            print("refresh refresh dir listing")
+            print("shell   show current shell path")
             input("[Enter] - Continue")
         elif cmd == "show w":
             print("Refer to the GNU GPL, section 15 <https://www.gnu.org/licenses/>.")
@@ -360,12 +371,12 @@ def main_loop() -> None:
                 refresh_page(page_idx)
         elif cmd.startswith("goto"):
             process_goto(cmd, len(pages))
-        elif cmd == "refr":
+        elif cmd == "refresh":
             refresh_page(page_idx)
-        elif cmd == "shll":
+        elif cmd == "shell":
             print(get_custom_shell())
         elif cmd == "gitui":
-            gitui_mainmenu()
+            gitinter.mainmenu()
         else:
             execute_command(cmd, shell=shell)
 
@@ -383,6 +394,8 @@ under certain conditions; type `show c' for details."""
 Please report bugs to the GitHub repository:
 <github.com/estella144/parashell/issues>"""
 
+    parashell_dir = os.getcwd()
+
     clear_screen()
 
     print(NOTICE)
@@ -395,7 +408,7 @@ Please report bugs to the GitHub repository:
     print()
     input("[Enter] - Continue")
 
-    main_loop()
+    main_loop(parashell_dir)
 
 if __name__ == "__main__":
     print("Starting Parashell...")

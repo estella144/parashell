@@ -266,7 +266,7 @@ def gitui_printpage() -> None:
     print(_get_git_log(6))
     print('='*columns)
 
-def gitui_mainmenu() -> None:
+def mainmenu() -> None:
     _clear_screen()
     gitui_printpage()
 
