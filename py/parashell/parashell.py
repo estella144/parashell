@@ -99,7 +99,6 @@ def get_shell_choice() -> str:
         else:
             return shells[shell_number-1][1]
 
-
 def get_custom_prompt(parashell_dir) -> str:
     '''Reads custom prompt from config file and returns it as a string'''
     config = configparser.ConfigParser()
@@ -109,7 +108,7 @@ def get_custom_prompt(parashell_dir) -> str:
     except KeyError:
         print("Error: Prompt key not found. Your config.ini may be out of date.")
         print("       Delete your config.ini file and restart ParaShell.")
-        return get_best_shell()
+        return "[{shell}] {username}@{hostname}:{cwd}"
 
 def get_custom_shell(parashell_dir) -> str:
     '''Reads custom shell from config file and returns it as a string'''
