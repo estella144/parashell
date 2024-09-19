@@ -420,6 +420,7 @@ def main() -> None:
     '''Starts Parashell.'''
 
     global DEV_STATE
+    global VERSION
 
     NOTICE = """Parashell Copyright (C) 2024 Oliver Nguyen
 This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
@@ -431,6 +432,9 @@ Please report bugs to the GitHub repository:
 <github.com/estella144/parashell/issues>"""
 
     parashell_dir = os.getcwd()
+    setup_config()
+    
+    print(f"Starting Parashell {VERSION}...")
 
     clear_screen()
 
@@ -447,7 +451,4 @@ Please report bugs to the GitHub repository:
     main_loop(parashell_dir)
 
 if __name__ == "__main__":
-    print("Starting Parashell...")
-    setup_config()
     main()
-    print("Goodbye")
